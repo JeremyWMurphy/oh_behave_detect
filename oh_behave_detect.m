@@ -14,6 +14,7 @@ prcnt_amps = 1; ...[0.16 0.16 0.16 0.16 0.16 0.16]; % proportion of different am
 
 enforce_licks = false; % enforce early lick error with noise and timeout
 time_out_len = 1;
+play_error_sound = false;
 
 iti_dist_mu = 8.5;
 iti_dist_sd = 0.5;
@@ -167,17 +168,41 @@ while f.UserData.state ~= 3
                 pause(baseln)
             end
 
+            if f.UserData.trialOutcome ~= 5
+                iti = round(1e3*iti_dist(trl_cntr));
+            elseif f.UserData.trialOutcome == 5 && enforce_licks
+                iti = time_out_len;
+                trl_cntr = trl_cntr - 1; % redo last trial
+                if play_error_sound
+                    sound(error_sound);
+                end
+            end
+
+            if trl_cntr > 1
+                % Change all outcome text back to gray, and track
+                % performance
+                hit_txt.FontColor = [0.5 0.5 0.5];
+                miss_txt.FontColor = [0.5 0.5 0.5];
+                cw_txt.FontColor = [0.5 0.5 0.5];
+                fa_txt.FontColor = [0.5 0.5 0.5];
+                axb.Children.YData = n_resp_types;
+                axb.Children.Labels = n_resp_types;
+                axb.XLim = [0 max(n_resp_types(:))+0.1];
+                axc.Children.YData = p_hit(1,:)./(p_hit(1,:)+p_hit(2,:));
+            end
+
             trial_type = trls(trl_cntr);
 
+            % set piezo
             if trial_type > 0
                 is_go = true;
                 cur_amp = sig_amps_12bit(trial_type);
-                msg_out = ['<W,' chan ',' pulse_type ',' pulse_len ',' num2str(cur_amp) ',' pulse_intrvl ',' pulse_reps ',0>'];
+                msg_out = ['<W,' chan ',' pulse_type ',' pulse_len ',' num2str(cur_amp) ',' pulse_intrvl ',' pulse_reps ',' num2str(iti) '>'];
                 ax.Title.String = ['Trial ' num2str(trl_cntr) ', Go, Amp = ' num2str(cur_amp)];
                 fprintf(data_fid_notes,['\n Trial ' num2str(trl_cntr) ' ' char(datetime('now','Format','HH:mm:ss')) ', Go Trial, Amp = ' num2str(cur_amp)]);
             else
                 is_go = false;
-                msg_out = ['<W,' chan ',' pulse_type ',' pulse_len ',0,' pulse_intrvl ',' pulse_reps ',0>'];
+                msg_out = ['<W,' chan ',' pulse_type ',' pulse_len ',0,' pulse_intrvl ',' pulse_reps ',' num2str(iti) '>'];
                 ax.Title.String = ['Trial ' num2str(trl_cntr) ', NoGo, Amp = 0'];
                 fprintf(data_fid_notes,['\n Trial ' num2str(trl_cntr) ' ' char(datetime('now','Format','HH:mm:ss')) ', NoGo Trial, Amp = 0']);
             end
@@ -226,30 +251,11 @@ while f.UserData.state ~= 3
                 fa_txt.FontColor = [0 1 1];
                 n_resp_types(4) = n_resp_types(4)+1;
             elseif f.UserData.trialOutcome == 5 % early lick
-                if enforce_licks
-                    sound(error_sound);
-                    pause(time_out_len);
-                end
+               
             end
 
             % print the outcome of the trial to file
             fprintf(data_fid_notes,[', Outcome = ' num2str(f.UserData.trialOutcome)'] );
-
-            if f.UserData.trialOutcome ~= 5 % if enforced early lick, prefer to control the interval by time_out_len
-                % begin ITI
-                iti = iti_dist(trl_cntr);
-                pause(iti)
-            end
-
-            % Change all outcome text back to gray
-            hit_txt.FontColor = [0.5 0.5 0.5];
-            miss_txt.FontColor = [0.5 0.5 0.5];
-            cw_txt.FontColor = [0.5 0.5 0.5];
-            fa_txt.FontColor = [0.5 0.5 0.5];
-            axb.Children.YData = n_resp_types;
-            axb.Children.Labels = n_resp_types;
-            axb.XLim = [0 max(n_resp_types(:))+0.1];
-            axc.Children.YData = p_hit(1,:)./(p_hit(1,:)+p_hit(2,:));
 
             % check for run ending events
             if f.UserData.state == 2  % end the run
