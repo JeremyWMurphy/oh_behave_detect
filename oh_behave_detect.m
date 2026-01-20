@@ -251,16 +251,6 @@ while f.UserData.state ~= 3
             axb.XLim = [0 max(n_resp_types(:))+0.1];
             axc.Children.YData = p_hit(1,:)./(p_hit(1,:)+p_hit(2,:));
 
-            % Change all outcome text back to gray
-            hit_txt.FontColor = [0.5 0.5 0.5];
-            miss_txt.FontColor = [0.5 0.5 0.5];
-            cw_txt.FontColor = [0.5 0.5 0.5];
-            fa_txt.FontColor = [0.5 0.5 0.5];
-            axb.Children.YData = n_resp_types;
-            axb.Children.Labels = n_resp_types;
-            axb.XLim = [0 max(n_resp_types(:))+0.1];
-            axc.Children.YData = p_hit(1,:)./(p_hit(1,:)+p_hit(2,:));
-
             % check for run ending events
             if f.UserData.state == 2  % end the run
                 ax.Title.String = 'Waiting to start';

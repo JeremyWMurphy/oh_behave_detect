@@ -12,11 +12,12 @@ const uint contingentStim = 0; // index of the analog channel that the animal re
 
 // time lengths
 const uint trigLen = Fs * 0.2;    // trigger lenght in seconds
-const uint respLen = Fs * 2;    // how long from stim start is a response considered valid,
+const uint respLen = Fs * 0.5;    // how long from stim start is a response considered valid,
 const uint valveLen = Fs * 1;   // how long to open reward valve in samples
 const uint frameRate = Fs*0.1;
 const uint frameTriggerLen = Fs * 0.001; 
 const uint cueTrigLen = Fs * 0.2;
+const uint pairDelay = Fs * 0;
 
 const uint earlyLen = Fs * 0.5; // how long to broadcast early lick
 
@@ -344,13 +345,13 @@ void pairing() {
           lickUnlatch = false;
           State = 14;
         }
-      }
+      } 
     } else if (stimBegin[contingentStim] && !respEnd){
       if (respStart){ // as soon as the contingent stim starts, exit no lick period and begin response window                    
         respT = loopCount;
         respStart = false;
       }
-      if (loopCount - respT > respLen) {
+      if (loopCount - respT > pairDelay) {
         respEnd = true;
       }
     }
