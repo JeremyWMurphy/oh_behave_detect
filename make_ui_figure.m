@@ -194,7 +194,7 @@ hit_txt = uilabel(gl, ...
     'BackgroundColor',[0 0 0],...
     'FontColor',[0.5 0.5 0.5]);
 hit_txt.Layout.Row = 2;
-hit_txt.Layout.Column = [7 8];
+hit_txt.Layout.Column = [6 7];
 hit_txt.FontSize = 32;
 hit_txt.FontColor = [0.5 0.5 0.5];
 
@@ -203,7 +203,7 @@ miss_txt = uilabel(gl, ...
     'BackgroundColor',[0 0 0],...
     'FontColor',[0.5 0.5 0.5]);
 miss_txt.Layout.Row = 2;
-miss_txt.Layout.Column = [9 10];
+miss_txt.Layout.Column = [8 9];
 miss_txt.FontSize = 32;
 miss_txt.FontColor = [0.5 0.5 0.5];
 
@@ -212,7 +212,7 @@ cw_txt = uilabel(gl, ...
     'BackgroundColor',[0 0 0],...
     'FontColor',[0.5 0.5 0.5]);
 cw_txt.Layout.Row = 2;
-cw_txt.Layout.Column = [11 12];
+cw_txt.Layout.Column = [10 11];
 cw_txt.FontSize = 32;
 cw_txt.FontColor = [0.5 0.5 0.5];
 
@@ -221,9 +221,18 @@ fa_txt = uilabel(gl, ...
     'BackgroundColor',[0 0 0],...
     'FontColor',[0.5 0.5 0.5]);
 fa_txt.Layout.Row = 2;
-fa_txt.Layout.Column = [13 14];
+fa_txt.Layout.Column = [12 13];
 fa_txt.FontSize = 32;
 fa_txt.FontColor = [0.5 0.5 0.5];
+
+el_txt = uilabel(gl, ...
+    'Text','EL',...    
+    'BackgroundColor',[0 0 0],...
+    'FontColor',[0.5 0.5 0.5]);
+el_txt.Layout.Row = 2;
+el_txt.Layout.Column = [14 15];
+el_txt.FontSize = 32;
+el_txt.FontColor = [0.5 0.5 0.5];
 
 %% performance axes
 

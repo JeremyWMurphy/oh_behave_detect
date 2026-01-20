@@ -171,7 +171,7 @@ while f.UserData.state ~= 3
             end
 
             if trial_outcome == 5
-                iti = 2e3;
+                iti = 0;
             else
                 iti = round(1e3*iti_dist(trl_cntr));
             end
@@ -252,7 +252,7 @@ while f.UserData.state ~= 3
                 n_resp_types(4) = n_resp_types(4)+1;
             elseif trial_outcome == 5 % early lick
                 el_txt.FontColor = [0 1 1];
-                pause(time_out_len)
+          
                 trl_cntr = trl_cntr - 1; % redo last trial
                 if play_error_sound
                     sound(error_sound);
