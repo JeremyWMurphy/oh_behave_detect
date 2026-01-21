@@ -44,8 +44,6 @@ err_amp = 0.5;
 err_t = 1/sound_fs:1/sound_fs:0.1;
 error_sound = err_amp*sin(2*pi*err_freq1*err_t) + sin(0.33*pi*err_freq2*err_t);
 
-prior_was_error = false;
-
 %% make trial structure
 
 % map requested voltage values to uint 12 bit
@@ -153,12 +151,14 @@ while f.UserData.state ~= 3
         axc.XTick = sig_amps;
         axc.XLim = [0 sig_amps(end)];
 
+        prior_was_error = false;
+
         while present % trial loop
 
-            if trl_cntr == 1 && run_type == 1 && -prior_was_error 
+            if trl_cntr == 1 && run_type == 1 && ~prior_was_error 
                 fprintf(data_fid_notes,'\nDetection Task');
                 pause(baseln)
-            elseif trl_cntr == 1 && run_type == 2 && -prior_was_error
+            elseif trl_cntr == 1 && run_type == 2 && ~prior_was_error
                 fprintf(data_fid_notes,'\nPairing Task');
                 pause(baseln)
             end
