@@ -12,9 +12,10 @@ prcnt_go = 1; % percentage of trials that are go trials
 sig_amps = 4;...[0.8 1 2 3 4 5]; % amplitudes of stimuli, Volts
 prcnt_amps = 1; ...[0.16 0.16 0.16 0.16 0.16 0.16]; % proportion of different amplitudes to present - needs to add to 1
 
-time_out_len = [3 5];
+time_out_len = 3;
 iti_fix_len = 3; % this is 
 play_error_sound = false;
+prior_was_error = false;
 
 iti_dist_mu = 5.5;
 iti_dist_sd = 0.5;
@@ -154,32 +155,19 @@ while f.UserData.state ~= 3
 
         while present % trial loop
 
-            if trl_cntr == 1 &&  run_type == 1 && trial_outcome ~= 5
+            if trl_cntr == 1 && run_type == 1 && -prior_was_error 
                 fprintf(data_fid_notes,'\nDetection Task');
                 pause(baseln)
-            elseif trl_cntr == 1 && run_type == 2 && trial_outcome ~= 5
+            elseif trl_cntr == 1 && run_type == 2 && -prior_was_error
                 fprintf(data_fid_notes,'\nPairing Task');
                 pause(baseln)
             end
 
-            if trial_outcome == 5
-                iti = round(time_out_len*1e3);
+            if prior_was_error
+                iti = round(1e3*time_out_len);
+                prior_was_error = false;                
             else
                 iti = round(1e3*iti_dist(trl_cntr));
-            end
-
-            if trl_cntr > 1 || trial_outcome == 5
-                % Change all outcome text back to gray, and track
-                % performance
-                hit_txt.FontColor = [0.5 0.5 0.5];
-                miss_txt.FontColor = [0.5 0.5 0.5];
-                cw_txt.FontColor = [0.5 0.5 0.5];
-                fa_txt.FontColor = [0.5 0.5 0.5];
-                el_txt.FontColor = [0.5 0.5 0.5];
-                axb.Children.YData = n_resp_types;
-                axb.Children.Labels = n_resp_types;
-                axb.XLim = [0 max(n_resp_types(:))+0.1];
-                axc.Children.YData = p_hit(1,:)./(p_hit(1,:)+p_hit(2,:));
             end
 
             trial_type = trls(trl_cntr);
@@ -213,7 +201,7 @@ while f.UserData.state ~= 3
             else
                 error('run type...')
             end
-
+            
             while ~trial_is_done
                 trial_is_done = f.UserData.TeensyDone;
                 % wait for end of trial message from teensy before moving on
@@ -245,14 +233,30 @@ while f.UserData.state ~= 3
             elseif trial_outcome == 5 % early lick
                 el_txt.FontColor = [0 1 1];
                 trl_cntr = trl_cntr - 1; % redo last trial
+                prior_was_error = true;
                 if play_error_sound
                     sound(error_sound);
                 end
+                fprintf('\nerror')
             end
 
-            if trial_outcome ~= 5 % if we're not administering a timeout, give the fixed iti portion, allowing for reward consumption, reset, etc
+            if ~prior_was_error % if we're not administering a timeout, give the fixed iti portion, allowing for reward consumption, reset, etc
                 pause(iti_fix_len);
+            else
+                pause(1);
             end
+
+            % Change all outcome text back to gray, and track
+            % performance
+            hit_txt.FontColor = [0.5 0.5 0.5];
+            miss_txt.FontColor = [0.5 0.5 0.5];
+            cw_txt.FontColor = [0.5 0.5 0.5];
+            fa_txt.FontColor = [0.5 0.5 0.5];
+            el_txt.FontColor = [0.5 0.5 0.5];
+            axb.Children.YData = n_resp_types;
+            axb.Children.Labels = n_resp_types;
+            axb.XLim = [0 max(n_resp_types(:))+0.1];
+            axc.Children.YData = p_hit(1,:)./(p_hit(1,:)+p_hit(2,:));
 
             % print the outcome of the trial to file
             fprintf(data_fid_notes,[', Outcome = ' num2str(trial_outcome)'] );

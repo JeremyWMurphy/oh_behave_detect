@@ -21,7 +21,7 @@ const uint trigLen = Fs * 0.2;    // trigger lenght in seconds
 const uint respLen = Fs * 2;    // how long from stim start is a response considered valid,
 const uint valveLen = Fs * 1;   // how long to open reward valve in samples
 const uint pairDelay = Fs * 0;
-const uint earlyLen = Fs * 1; // how long to broadcast early lick
+const uint earlyLen = Fs * 0.2; // how long to broadcast early lick
 
 // channels
 // ins
@@ -443,10 +443,12 @@ void breakWave(){
     stimOn[i] = false;
     stimBegin[i] = false;
     inBase[i] = false;
+    BaseCntr[i] = 0; 
     repCntr[i] = 0;
     whaleCntr[i] = 0;
     wavIncrmntr[i] = 0;
     inIpi[i] = false;
+    ipiCntr[i] = 0;
     curVal[i] = 0;
   }
 }

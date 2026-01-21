@@ -12,9 +12,9 @@ prcnt_go = 1; % percentage of trials that are go trials
 sig_amps = 4;...[0.8 1 2 3 4 5]; % amplitudes of stimuli, Volts
 prcnt_amps = 1; ...[0.16 0.16 0.16 0.16 0.16 0.16]; % proportion of different amplitudes to present - needs to add to 1
 
-time_out_len = 3;
-iti_fix_len = 3; % this is 
-play_error_sound = false;
+time_out_len = [3 7]; % interval to timeout if there was an early lick and we are enforcing them
+iti_fix_len = 3; % fixed iti following non-early lick trials to allow for water consumption
+play_error_sound = true;
 
 iti_dist_mu = 5.5;
 iti_dist_sd = 0.5;
@@ -41,8 +41,10 @@ sound_fs = 10e3;
 err_freq1 = 3000;
 err_freq2 = 5000;
 err_amp = 0.5;
-err_t = 1/sound_fs:1/sound_fs:0.5;
+err_t = 1/sound_fs:1/sound_fs:0.1;
 error_sound = err_amp*sin(2*pi*err_freq1*err_t) + sin(0.33*pi*err_freq2*err_t);
+
+prior_was_error = false;
 
 %% make trial structure
 
@@ -59,7 +61,6 @@ end
 n_nogo_trls = round(n_trials*(1-prcnt_go));
 trls = cat(1,trls,zeros(n_nogo_trls,1));
 
-trial_outcome = 0;
 %% serial coms w/ teensy
 
 % teensy codes
@@ -154,32 +155,19 @@ while f.UserData.state ~= 3
 
         while present % trial loop
 
-            if trl_cntr == 1 &&  run_type == 1 && trial_outcome ~= 5
+            if trl_cntr == 1 && run_type == 1 && -prior_was_error 
                 fprintf(data_fid_notes,'\nDetection Task');
                 pause(baseln)
-            elseif trl_cntr == 1 && run_type == 2 && trial_outcome ~= 5
+            elseif trl_cntr == 1 && run_type == 2 && -prior_was_error
                 fprintf(data_fid_notes,'\nPairing Task');
                 pause(baseln)
             end
 
-            if trial_outcome == 5
-                iti = round(1e3*time_out_len); 
+            if prior_was_error
+                iti = 1e3*round(time_out_len(1) + (time_out_len(2) - time_out_len(1)) * rand);
+                prior_was_error = false;                
             else
                 iti = round(1e3*iti_dist(trl_cntr));
-            end
-
-            if trl_cntr > 1 || trial_outcome == 5
-                % Change all outcome text back to gray, and track
-                % performance
-                hit_txt.FontColor = [0.5 0.5 0.5];
-                miss_txt.FontColor = [0.5 0.5 0.5];
-                cw_txt.FontColor = [0.5 0.5 0.5];
-                fa_txt.FontColor = [0.5 0.5 0.5];
-                el_txt.FontColor = [0.5 0.5 0.5];
-                axb.Children.YData = n_resp_types;
-                axb.Children.Labels = n_resp_types;
-                axb.XLim = [0 max(n_resp_types(:))+0.1];
-                axc.Children.YData = p_hit(1,:)./(p_hit(1,:)+p_hit(2,:));
             end
 
             trial_type = trls(trl_cntr);
@@ -245,16 +233,29 @@ while f.UserData.state ~= 3
             elseif trial_outcome == 5 % early lick
                 el_txt.FontColor = [0 1 1];
                 trl_cntr = trl_cntr - 1; % redo last trial
+                prior_was_error = true;
                 if play_error_sound
                     sound(error_sound);
                 end
             end
 
-            if trial_outcome ~= 5 % if we're not administering a timeout, give the fixed iti portion, allowing for reward consumption, reset, etc
+            if ~prior_was_error % if we're not administering a timeout, give the fixed iti portion, allowing for reward consumption, reset, etc
                 pause(iti_fix_len);
             else
-                pause(1);
+                pause(0.5);
             end
+
+            % Change all outcome text back to gray, and track
+            % performance
+            hit_txt.FontColor = [0.5 0.5 0.5];
+            miss_txt.FontColor = [0.5 0.5 0.5];
+            cw_txt.FontColor = [0.5 0.5 0.5];
+            fa_txt.FontColor = [0.5 0.5 0.5];
+            el_txt.FontColor = [0.5 0.5 0.5];
+            axb.Children.YData = n_resp_types;
+            axb.Children.Labels = n_resp_types;
+            axb.XLim = [0 max(n_resp_types(:))+0.1];
+            axc.Children.YData = p_hit(1,:)./(p_hit(1,:)+p_hit(2,:));
 
             % print the outcome of the trial to file
             fprintf(data_fid_notes,[', Outcome = ' num2str(trial_outcome)'] );
