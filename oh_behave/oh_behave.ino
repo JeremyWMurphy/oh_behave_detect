@@ -10,7 +10,7 @@ Serial interaction
 
 const uint Fs = 2000;  // sampling rate
 
-const bool enforceEarlyLick = true; // error out if the mouse licks pre-stim 
+const bool enforceEarlyLick = false; // error out if the mouse licks pre-stim 
 const uint lickMax = 3; // how many licks are too many licks
 const bool waitForNextFrame = false; // if frame counting wait for a new frame to start to present a stimulus
 
@@ -20,7 +20,7 @@ const uint contingentStim = 0; // index of the analog channel that the animal re
 const uint trigLen = Fs * 0.2;    // trigger lenght in seconds
 const uint respLen = Fs * 2;    // how long from stim start is a response considered valid,
 const uint valveLen = Fs * 1;   // how long to open reward valve in samples
-const uint pairDelay = Fs * 0;
+const uint pairDelay = Fs * 1;
 const uint earlyLen = Fs * 0.2; // how long to broadcast early lick
 
 // channels

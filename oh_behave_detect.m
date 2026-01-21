@@ -14,7 +14,7 @@ prcnt_amps = 1; ...[0.16 0.16 0.16 0.16 0.16 0.16]; % proportion of different am
 
 time_out_len = [3 7]; % interval to timeout if there was an early lick and we are enforcing them
 iti_fix_len = 3; % fixed iti following non-early lick trials to allow for water consumption
-play_error_sound = true;
+play_error_sound = false; % play gross noise if early lick
 
 iti_dist_mu = 5.5;
 iti_dist_sd = 0.5;
