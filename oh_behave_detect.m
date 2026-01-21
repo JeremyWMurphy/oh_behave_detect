@@ -13,10 +13,10 @@ sig_amps = 4;...[0.8 1 2 3 4 5]; % amplitudes of stimuli, Volts
 prcnt_amps = 1; ...[0.16 0.16 0.16 0.16 0.16 0.16]; % proportion of different amplitudes to present - needs to add to 1
 
 time_out_len = 2;
-iti_fix_len = 3;
+iti_fix_len = 3; % this is 
 play_error_sound = false;
 
-iti_dist_mu = 8.5;
+iti_dist_mu = 5.5;
 iti_dist_sd = 0.5;
 iti_dist_kurt = 3;
 iti_dist_skew = 0;
@@ -121,7 +121,7 @@ while f.UserData.state ~= 3
 
         run_type = f.UserData.run_type; % Detect
 
-        trl_cntr = 0;
+        trl_cntr = 1;
         present = 1;
 
         %% setup data files
@@ -155,12 +155,6 @@ while f.UserData.state ~= 3
         axc.XLim = [0 sig_amps(end)];
 
         while present % trial loop
-
-            if trl_cntr > n_trials
-                present = 0;
-            end
-
-            trl_cntr = trl_cntr + 1;
 
             if trl_cntr == 1 &&  run_type == 1 && trial_outcome ~= 5
                 fprintf(data_fid_notes,'\nDetection Task');
@@ -287,6 +281,12 @@ while f.UserData.state ~= 3
             elseif f.UserData.state == 3 % quit
                 present = 0;
             end
+
+            if trl_cntr > n_trials
+                present = 0;
+            end
+
+            trl_cntr = trl_cntr + 1;
 
         end
     end

@@ -2,9 +2,15 @@
 #include <Adafruit_MCP4728.h>
 #include <Wire.h>
 
+/*
+Serial interaction
+<W,0,0,0,0,0,0,0> : set wave parameters, <W,(1)channel,(2)wave type,(3)wave length,(4)wave amp,(5)wave inter-pulse length, (6) wave reps, (7) wave baseline>
+<S,0> : set state
+*/
+
 const uint Fs = 2000;  // sampling rate
 
-const bool enforceEarlyLick = true; // error out if the mouse licks in the cue-s2 interval
+const bool enforceEarlyLick = true; // error out if the mouse licks pre-stim 
 const uint lickMax = 3; // how many licks are too many licks
 const bool waitForNextFrame = false; // if frame counting wait for a new frame to start to present a stimulus
 
@@ -14,11 +20,7 @@ const uint contingentStim = 0; // index of the analog channel that the animal re
 const uint trigLen = Fs * 0.2;    // trigger lenght in seconds
 const uint respLen = Fs * 2;    // how long from stim start is a response considered valid,
 const uint valveLen = Fs * 1;   // how long to open reward valve in samples
-const uint frameRate = Fs*0.1;
-const uint frameTriggerLen = Fs * 0.001; 
-const uint cueTrigLen = Fs * 0.2;
 const uint pairDelay = Fs * 0;
-
 const uint earlyLen = Fs * 0.5; // how long to broadcast early lick
 
 // channels
@@ -31,47 +33,54 @@ const uint trigChan1 = 0;  // trigger channel;
 const uint trigChan2 = 1;  // trigger channel;
 const uint trigChan3 = 2;  // trigger channel;
 const uint trigChan4 = 3;  // trigger channel;
-const uint cueTrigChan = 5; 
 const uint valveChan1 = 4;
 
 volatile uint16_t wheelVal = 0;
 volatile int lickVal = 0;
 
 // state stuff
-volatile uint State = 0;
+const uint IDLE       = 0;
+const uint RESET      = 1;
+const uint GO         = 2;
+const uint NOGO       = 3;
+const uint PAIR       = 4; 
+const uint VALVEO     = 5; 
+const uint VALVEC     = 6; 
+const uint TRIGGER    = 7; 
+const uint REWARD     = 8; 
+const uint STIMULUS   = 9; 
+const uint EARLYLICK = 10; 
+volatile uint State = IDLE;
 
+// Behavior tracking
+const uint HIT  = 1;
+const uint MISS = 2;
+const uint CW   = 3;
+const uint FA   = 4;
+const uint LICK = 5;
+volatile uint trialOutcome = 0;
+
+// general timers/trackers
 volatile bool stimEnd = false;
+volatile bool conStimOn = false;
+
 volatile bool respStart = true;
 volatile bool respEnd = false;
 volatile bool hasResponded = false;
 volatile uint32_t respT = 0;
 
-volatile bool conStimOn = false;
-
+volatile uint lickCount = 0;
+volatile bool firstLick = true;
+volatile bool lickUnlatch = false;
 volatile bool earlyStart = false;
 volatile uint32_t earlyT = 0;
 
 volatile bool dispStart = true;
 volatile uint32_t dispT = 0;
-volatile bool waitForDisp = false;
 
 volatile bool trigStart = true;
 volatile bool trigEnd = false;
 volatile uint32_t trigT = 0;
-
-volatile bool cueStart = true;
-volatile uint32_t cueT = 0;
-
-volatile uint lickCount = 0;
-volatile bool firstLick = true;
-volatile bool lickUnlatch = false;
-
-volatile uint trialOutcome = 0;
-const uint HIT = 1;
-const uint MISS = 2;
-const uint CW = 3;
-const uint FA = 4;
-const uint LICK = 5;
 
 // waveform parameters to be set over serial for each of the 4 DAC channels
 volatile uint waveType[4] = { 1, 1, 1, 1 };   // wave types: 0 = whale, 1 = square
@@ -109,7 +118,6 @@ volatile uint32_t frameCount = 0;
 volatile uint32_t curFrame = 0;       // for waiting for next frame to begin trial
 volatile uint32_t lastFrame = 0; // for triggering frames of a camera
 volatile bool frameWaitStart = true;  // for waiting for next frame to begin trial
-volatile bool triggerCameraFrames = false;
 
 // objs
 Adafruit_MCP4728 mcp;
@@ -155,11 +163,9 @@ void setup() {
   pinMode(trigChan4, OUTPUT);
   digitalWrite(trigChan4, LOW);
 
-  pinMode(cueTrigChan, OUTPUT);
-  digitalWrite(cueTrigChan, LOW);
-
   // start main interrupt timer program at specified sample rate
   t1.begin(ohBehave, 1E6 / Fs);
+
 }
 
 // functions called by timer should be short, run as quickly as
@@ -167,54 +173,39 @@ void setup() {
 
 void ohBehave() {
 
-  if (State == 0) {  // do nothing state
+  if (State == IDLE) {  // do nothing state
 
-  } else if (State == 1) {  // reset main
+  } else if (State == RESET) {  // reset main
     // this should only be called for one loop of ohBehave before reverting to state 0
     loopCount = 0;
     frameCount = 0;
 
-  } else if (State == 2) {  // GO
+  } else if (State == GO) {  // GO
     goNoGo();
 
-  } else if (State == 3) {  // NO-GO
+  } else if (State == NOGO) {  // NO-GO
     goNoGo();
 
-  } else if (State == 4) {  // send triggers
+  } else if (State == PAIR){ // pairing state
+    pairing();
+
+  } else if (State == TRIGGER) {  // send triggers
     fireTrig();
 
-  } else if (State == 5) {  // open valve1
+  } else if (State == VALVEO) {  // open valve1
     digitalWrite(valveChan1, HIGH);
 
-  } else if (State == 6) {  // close valve1
+  } else if (State == VALVEC) {  // close valve1
     digitalWrite(valveChan1, LOW);
 
-  } else if (State == 7) {  // trigger a typical reward
+  } else if (State == REWARD) {  // trigger a typical reward
     justReward();
   
-  } else if (State == 9) {  // just send the stimulus
+  } else if (State == STIMULUS) {  // just send the stimulus
     justStim();
   
-  } else if (State == 10) {  // trigger camera frames
-    triggerCameraFrames = true;
-    State = 0;
-  
-  } else if (State == 11) {  // turn off camera frame triggers
-    triggerCameraFrames = false;
-    State = 0;
-  
-  } else if (State == 12){
-     cueTrig();
-  
-  } else if (State == 13){ // pairing state
-    pairing();
-  
-  } else if (State == 14){ // if early licks are enforced, and there's an early lick, break the trial and reset
+  } else if (State == EARLYLICK){ // if early licks are enforced, and there's an early lick, break the trial and reset
     dealWithEarlyLick();
-  }
-
-  if (triggerCameraFrames){
-    triggerCamera();
   }
   
   dataReport();
@@ -231,7 +222,7 @@ void goNoGo() {
   if (waitForNextFrame && frameWaitStart) {  // if we're waiting for the next frame to start
     curFrame = frameCount;
     frameWaitStart = false;
-  } else if (!waitForNextFrame || frameCount > curFrame) { // if we aren't waiting for the next frame or it is the next frame, start the trial   
+  } else if (!waitForNextFrame || frameCount > curFrame) { // if we aren't waiting for the next frame or it is the next frame, start the trial
     waveWrite();  // present stim
     if (!stimBegin[contingentStim]){
       if (enforceEarlyLick){
@@ -249,19 +240,19 @@ void goNoGo() {
           lickCount = 0;
           firstLick = true;
           lickUnlatch = false;
-          State = 14;
+          State = EARLYLICK;
         }
-      }
+      }      
     } else if (stimBegin[contingentStim] && !respEnd){
       if (respStart){ // as soon as the contingent stim starts, exit no lick period and begin response window                    
         respT = loopCount;
         respStart = false;
       }          
       if (!hasResponded) {    
-        if ((State == 2) && (lickVal == HIGH)) {  // check for licks, if any, then HIT or FA, mark it, don't keep checking
+        if ((State == GO) && (lickVal == HIGH)) {  // check for licks, if any, then HIT or FA, mark it, don't keep checking
           trialOutcome = HIT;
           hasResponded = true;
-        } else if ((State == 3) && (lickVal == HIGH)) {  // FA
+        } else if ((State == NOGO) && (lickVal == HIGH)) {  // FA
           trialOutcome = FA;
           hasResponded = true;
         }
@@ -276,9 +267,9 @@ void goNoGo() {
         dispStart = false;
       }
       if (trialOutcome == 0) {  // if there was never a response, assign miss or CW
-        if (State == 2) {
+        if (State == GO) {
           trialOutcome = MISS;
-        } else if (State == 3) {
+        } else if (State == NOGO) {
           trialOutcome = CW;
         }
       }      
@@ -343,7 +334,7 @@ void pairing() {
           lickCount = 0;
           firstLick = true;
           lickUnlatch = false;
-          State = 14;
+          State = EARLYLICK;
         }
       } 
     } else if (stimBegin[contingentStim] && !respEnd){
@@ -476,7 +467,7 @@ void endOfTrialCleanUp(){
   dispStart = true;
   frameWaitStart = true;
   trialOutcome = 0;
-  State = 0;
+  State = IDLE;
 }
 
 void dealWithEarlyLick(){
@@ -497,7 +488,7 @@ void fireTrig() {
     trigStart = false;
   }
   if (loopCount - trigT > trigLen) {
-    State = 0; 
+    State = IDLE; 
     trigStart = true;
     digitalWrite(trigChan1, LOW);
     digitalWrite(trigChan2, LOW);
@@ -509,39 +500,6 @@ void fireTrig() {
     digitalWrite(trigChan3, HIGH);
     digitalWrite(trigChan4, HIGH);
   }
-}
-
-void cueTrig() {
-
-  if (cueStart) {
-    cueT = loopCount;
-    cueStart = false;
-  }
-  if (loopCount - cueT > cueTrigLen) {
-    State = 0; 
-    cueStart = true;
-    digitalWrite(cueTrigChan, LOW);
-  } else {
-    digitalWrite(cueTrigChan, HIGH);
-  }
-  
-}
-
-void triggerCamera() {
-  // for manually triggering individual frames at a specified frame rate
-  if (loopCount - lastFrame >= frameRate){
-    lastFrame = loopCount;
-    if (trigStart) {
-      trigT = loopCount;
-      trigStart = false;
-    }
-    if (loopCount - trigT > frameTriggerLen) {
-      trigStart = true;
-      digitalWrite(trigChan4, LOW);    
-    } else {
-      digitalWrite(trigChan4, HIGH);
-    }
-  } 
 }
 
 void pollData() {
