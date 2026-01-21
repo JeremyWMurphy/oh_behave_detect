@@ -10,7 +10,7 @@ ht = ss(4);
 
 fig = uifigure('Position',[round(wd*0.25),round(ht*0.25),round(wd*0.8),round(ht*0.67)],'Color','black');
 
-fig.UserData = struct('trialOutcome',0,'run_type',1,'state',0,'Done',0);
+fig.UserData = struct('trialOutcome',0,'run_type',1,'state',0,'TeensyDone',0);
 
 tg = uitabgroup(fig,'Position',[0,0,round(wd*0.8),round(ht*0.67)]);
 t1 = uitab(tg,'Title','Data','BackgroundColor','black');
@@ -282,7 +282,7 @@ function pthButtonPushed(txt)
 end
 
 function rewButtonPushed(s)
-    write(s,'<S,7>','string');
+    write(s,'<S,8>','string');
 end
 
 function vOpenButtonPushed(s)

@@ -29,10 +29,10 @@ if ~isempty(data)
     ot = find(data(:,4) ~= 0,1,'first'); 
     if ~isempty(ot)
         f.UserData.trialOutcome = data(ot,4);
-        f.UserData.Done = true;
+        f.UserData.TeensyDone = true;
     else
         f.UserData.trialOutcome = data(1,4);
-        f.UserData.Done = false;
+        f.UserData.TeensyDone = false;
     end
 
 end

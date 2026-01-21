@@ -12,7 +12,7 @@ prcnt_go = 1; % percentage of trials that are go trials
 sig_amps = 4;...[0.8 1 2 3 4 5]; % amplitudes of stimuli, Volts
 prcnt_amps = 1; ...[0.16 0.16 0.16 0.16 0.16 0.16]; % proportion of different amplitudes to present - needs to add to 1
 
-time_out_len = 3;
+time_out_len = [3 5];
 iti_fix_len = 3; % this is 
 play_error_sound = false;
 
@@ -163,7 +163,7 @@ while f.UserData.state ~= 3
             end
 
             if trial_outcome == 5
-                iti = round(1e3*time_out_len); 
+                iti = round(time_out_len*1e3);
             else
                 iti = round(1e3*iti_dist(trl_cntr));
             end
@@ -213,7 +213,7 @@ while f.UserData.state ~= 3
             else
                 error('run type...')
             end
-            
+
             while ~trial_is_done
                 trial_is_done = f.UserData.TeensyDone;
                 % wait for end of trial message from teensy before moving on
@@ -252,8 +252,6 @@ while f.UserData.state ~= 3
 
             if trial_outcome ~= 5 % if we're not administering a timeout, give the fixed iti portion, allowing for reward consumption, reset, etc
                 pause(iti_fix_len);
-            else
-                pause(1);
             end
 
             % print the outcome of the trial to file
