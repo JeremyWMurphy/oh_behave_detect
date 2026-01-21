@@ -478,6 +478,7 @@ void dealWithEarlyLick(){
   if (earlyStart){
     earlyT = loopCount;
     earlyStart = false;
+    trialOutcome = LICK;
     breakWave();
   } else if (loopCount - earlyT > earlyLen){
     endOfTrialCleanUp();
