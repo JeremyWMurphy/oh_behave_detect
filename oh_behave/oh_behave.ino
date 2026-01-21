@@ -21,7 +21,7 @@ const uint trigLen = Fs * 0.2;    // trigger lenght in seconds
 const uint respLen = Fs * 2;    // how long from stim start is a response considered valid,
 const uint valveLen = Fs * 1;   // how long to open reward valve in samples
 const uint pairDelay = Fs * 0;
-const uint earlyLen = Fs * 1; // how long to broadcast early lick
+const uint earlyLen = Fs * 0.5; // how long to broadcast early lick
 
 // channels
 // ins
@@ -476,6 +476,7 @@ void dealWithEarlyLick(){
   if (earlyStart){
     earlyT = loopCount;
     earlyStart = false;
+    trialOutcome = LICK;
     breakWave();
   } else if (loopCount - earlyT > earlyLen){
     endOfTrialCleanUp();
