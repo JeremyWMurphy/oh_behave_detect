@@ -8,17 +8,16 @@ teensy_fs = 2000; % teensy sample rate, Hz
 baseln = 5; % length of pause at begining of each run, sec
 
 n_trials = 300; % number of total trials to run
-prcnt_go = 1; % percentage of trials that are go trials
-sig_amps = [4]; % amplitudes of stimuli, Volts
-prcnt_amps = [1]; % proportion of different amplitudes to present - needs to add to 1
+prcnt_go = 0.9; % percentage of trials that are go trials
+sig_amps = [0.8 1 2 3 4 5]; % amplitudes of stimuli, Volts
+prcnt_amps = [0.16 0.16 0.16 0.16 0.16 0.16]; % proportion of different amplitudes to present - needs to add to 1
 
+time_out_len = [3 5]; % interval to timeout if there was an early lick and we are enforcing them
 iti_fix_len = 6; % fixed iti following non-early lick trials to allow for water consumption
+play_error_sound = true; % play gross noise if early lick
+
 iti_mu = 3.5;
 iti_sd = 0.5;
-
-time_out_len = [5 7]; % interval to timeout if there was an early lick and we are enforcing them
-play_error_sound = false; % play gross noise if early lick
-play_hit_sound = true;
 
 % initial teensy waveform stimulus parameters, currently fixed to Shin and
 % Moore, 2019: whale, 6 ms rise, 20 ms fall, 20 Hz, 10 reps, 500 ms --
@@ -36,16 +35,15 @@ n_sec_disp = 10; % number of seconds to display on the graph
 
 % sounds
 sound_fs = 10e3;
-err_freq1 = 2500;
-err_freq2 = 4500;
+err_freq1 = 3000;
+err_freq2 = 5000;
 err_amp = 0.5;
-err_t = 1/sound_fs:1/sound_fs:1;
+err_t = 1/sound_fs:1/sound_fs:0.1;
 error_sound = err_amp*sin(2*pi*err_freq1*err_t) + sin(0.33*pi*err_freq2*err_t);
 
 % hit  sound
 hit_t = 1/sound_fs:1/sound_fs:0.05;
-hit_amp = 0.25;
-hit_sound = hit_amp.*chirp(hit_t,250,hit_t(end),1000) .* gausswin(numel(hit_t))';
+hit_sound = chirp(chirp_t,250,chirp_t(end),1000);
 
 
 %% make trial structure
@@ -224,9 +222,7 @@ while f.UserData.state ~= 3
                 hit_txt.FontColor = [0 1 1];
                 n_resp_types(1) = n_resp_types(1)+1;
                 p_hit(1,trial_type) = p_hit(1,trial_type) + 1;
-                if play_hit_sound
-                    sound(hit_sound,sound_fs);
-                end
+                sound(
             elseif trial_outcome == 2
                 miss_txt.FontColor = [0 1 1];
                 n_resp_types(2) = n_resp_types(2)+1;
@@ -242,7 +238,7 @@ while f.UserData.state ~= 3
                 trl_cntr = trl_cntr - 1; % redo last trial
                 prior_was_error = true;
                 if play_error_sound
-                    sound(error_sound,sound_fs);
+                    sound(error_sound,1);
                 end
             end
 
