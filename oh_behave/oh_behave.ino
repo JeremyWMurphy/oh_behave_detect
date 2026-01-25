@@ -12,6 +12,7 @@ const uint Fs = 2000;  // sampling rate
 
 const bool enforceEarlyLick = false; // error out if the mouse licks pre-stim 
 const uint lickMax = 10; // how many licks are too many licks
+
 const bool waitForNextFrame = false; // if frame counting wait for a new frame to start to present a stimulus
 
 const uint contingentStim = 0; // index of the analog channel that the animal responding to / detecting
