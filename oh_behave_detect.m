@@ -12,8 +12,9 @@ prcnt_go = 1; % percentage of trials that are go trials
 sig_amps = [4]; % amplitudes of stimuli, Volts
 prcnt_amps = [1]; % proportion of different amplitudes to present - needs to add to 1
 
-iti_fix_len = 6; % fixed iti following non-early lick trials to allow for water consumption
-iti_mu = 3.5;
+% mean and sd of random iti, should factor in tolal time of teensy trial -
+% i.e., stim, response, reward, consume, reward removal, times
+iti_mu = 5;
 iti_sd = 0.5;
 
 time_out_len = [5 7]; % interval to timeout if there was an early lick and we are enforcing them
@@ -217,7 +218,6 @@ while f.UserData.state ~= 3
             end
 
             trial_outcome = f.UserData.trialOutcome;
-            trial_is_done = false;
 
             % color GUI outcome text based on this trials outcome
             if trial_outcome == 1
@@ -247,7 +247,15 @@ while f.UserData.state ~= 3
             end
 
             if ~prior_was_error % if we're not administering a timeout, give the fixed iti portion, allowing for reward consumption, reset, etc
-                pause(iti_fix_len);
+                while trial_is_done % now wait until the whole trial (i.e., response, reward delivery, consume period, etc) is done
+                    trial_is_done = f.UserData.TeensyDone;
+                    % wait for end of trial message from teensy before moving on
+                    % but make sure the serial callback has room to breath:
+                    pause(0.1)
+                    if f.UserData.state == 2 || f.UserData.state == 3 % this allows us to end the run or quit while waiting for trial outcome
+                        break
+                    end
+                end
             else
                 pause(0.5);
             end

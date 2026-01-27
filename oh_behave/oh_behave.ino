@@ -8,38 +8,43 @@ Serial interaction
 <S,0> : set state
 */
 
-const uint Fs = 2000;  // sampling rate
+const uint Fs = 2000;  // Teensy sampling rate
 
 const bool enforceEarlyLick = false; // error out if the mouse licks pre-stim 
 const uint lickMax = 10; // how many licks are too many licks
 
 const bool waitForNextFrame = false; // if frame counting wait for a new frame to start to present a stimulus
 
-const uint contingentStim = 0; // index of the analog channel that the animal responding to / detecting
+const uint contingentStim = 0; // index of the analog channel that the animal is responding to / detecting
 
 // time lengths
-const uint trigLen = Fs * 0.2;    // trigger lenght in seconds
-const uint respLen = Fs * 2;    // how long from stim start is a response considered valid,
-const uint valveLen = Fs * 1;   // how long to open reward valve in samples
-const uint pairDelay = Fs * 1;
-const uint earlyLen = Fs * 0.2; // how long to broadcast early lick
+const uint trigLen =    Fs * 0.2; // trigger lenght in seconds
+const uint respLen =    Fs * 1;   // how long from stim start is a response considered valid,
+const uint valveLen =   Fs * 1;   // how long to open reward valve in samples
+const uint consumeLen = Fs * 4;   // how long from reward administration does the animal have to consume the reward
+const uint vacLen =     Fs * 1;   // how long to open reward valve in samples
+const uint pairDelay =  Fs * 1;   // in pairing trials, time between stim and reward
+const uint earlyLen =   Fs * 0.2; // how long to broadcast early lick
+const uint removeLen =  Fs * 1;
 
 // channels
 // ins
 const uint wheelChan = 14;  // analog in
 const uint frameChan = 23;  // frame counter channel, interrupt
-const uint lickChan = 22;   //lick channel, di
+const uint lickChan  = 22;  //lick channel
 // outs
 const uint trigChan1 = 0;  // trigger channel;
 const uint trigChan2 = 1;  // trigger channel;
 const uint trigChan3 = 2;  // trigger channel;
 const uint trigChan4 = 3;  // trigger channel;
-const uint valveChan1 = 4;
+
+const uint valveChan1 = 4; // reward valve
+const uint valveChan2 = 5; // vac line valve for reward removal
 
 volatile uint16_t wheelVal = 0;
 volatile int lickVal = 0;
 
-// state stuff
+// state definitions
 const uint IDLE       = 0;
 const uint RESET      = 1;
 const uint GO         = 2;
@@ -78,6 +83,12 @@ volatile uint32_t earlyT = 0;
 
 volatile bool dispStart = true;
 volatile uint32_t dispT = 0;
+
+volatile bool consumeStart = true;
+volatile uint32_t consumeT = 0;
+
+volatile bool removeStart = true;
+volatile uint32_t removeT = 0;
 
 volatile bool trigStart = true;
 volatile bool trigEnd = false;
@@ -262,8 +273,7 @@ void goNoGo() {
       if (loopCount - respT > respLen) {
         respEnd = true;
       }
-    }
-    if (stimEnd && respEnd) {  // if stim and resp window are both over, evaluate outcome
+    } else if (respEnd) {  // if stim and resp window are both over, evaluate outcome
       if (dispStart) {
         dispT = loopCount;
         dispStart = false;
@@ -274,14 +284,18 @@ void goNoGo() {
         } else if (State == NOGO) {
           trialOutcome = CW;
         }
-      }      
-      if (loopCount - dispT > valveLen) {  // end of reward dispens, reset things          
+      }
+      if (loopCount - dispT > valveLen) {  // end of reward dispense         
         digitalWrite(valveChan1, LOW);
-        endOfTrialCleanUp();       
+        if (consumeStart){
+          consumeT = loopCount;
+          consumeStart = false;
+        }
+        if (loopCount - consumeT > consumeLen){
+          removeReward();
+        }
       } else if (trialOutcome == HIT) {
         digitalWrite(valveChan1, HIGH);
-      } else {
-          // miss, cw, fa .. can put other things here, like FA feedback
       }
     }
   }
@@ -355,8 +369,14 @@ void pairing() {
         dispStart = false;
       }
       if (loopCount - dispT > valveLen) {  // end of reward dispens, reset things          
-        digitalWrite(valveChan1, LOW);
-        endOfTrialCleanUp(); 
+        digitalWrite(valveChan1, LOW); 
+        if (consumeStart){
+          consumeT = loopCount;
+          consumeStart = false;
+        }
+        if (loopCount - consumeT > consumeLen){
+          removeReward();
+        }
       } else {
         digitalWrite(valveChan1, HIGH);
       }
@@ -469,9 +489,23 @@ void endOfTrialCleanUp(){
   hasResponded = false;
   respStart = true;
   dispStart = true;
+  consumeStart = true;
+  removeStart = true;
   frameWaitStart = true;
   trialOutcome = 0;
   State = IDLE;
+}
+
+void removeReward(){
+  if (removeStart) {
+    removeT = loopCount;
+    removeStart = false;
+  } else if (loopCount - removeT > removeLen) {
+    digitalWrite(valveChan2, LOW);
+    endOfTrialCleanUp();
+  } else if (trialOutcome == HIT) {
+    digitalWrite(valveChan2, HIGH);
+  }
 }
 
 void dealWithEarlyLick(){
