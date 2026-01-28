@@ -17,9 +17,9 @@ prcnt_amps = [1]; % proportion of different amplitudes to present - needs to add
 iti_mu = 5;
 iti_sd = 0.5;
 
-time_out_len = [5 7]; % interval to timeout if there was an early lick and we are enforcing them
+time_out_len = [3 5]; % interval to timeout if there was an early lick and we are enforcing them
 play_error_sound = false; % play gross noise if early lick
-play_hit_sound = true;
+play_hit_sound = false;
 
 % initial teensy waveform stimulus parameters, currently fixed to Shin and
 % Moore, 2019: whale, 6 ms rise, 20 ms fall, 20 Hz, 10 reps, 500 ms --
@@ -31,22 +31,28 @@ pulse_intrvl = '25'; % ms
 pulse_reps = '10';
 
 % device parameters
-serial_port = 'COM5';
+serial_port = 'COM3';
 up_every = 5000; % number of bytes to read in at a time
 n_sec_disp = 10; % number of seconds to display on the graph
 
 % sounds
 sound_fs = 10e3;
+
+%error sound
+err_len = 0.5;
+err_amp = 0.5;
 err_freq1 = 2500;
 err_freq2 = 4500;
-err_amp = 0.5;
-err_t = 1/sound_fs:1/sound_fs:1;
+err_t = 1/sound_fs:1/sound_fs:err_len;
 error_sound = err_amp*sin(2*pi*err_freq1*err_t) + sin(0.33*pi*err_freq2*err_t);
 
 % hit  sound
-hit_t = 1/sound_fs:1/sound_fs:0.05;
 hit_amp = 0.25;
-hit_sound = hit_amp.*chirp(hit_t,250,hit_t(end),1000) .* gausswin(numel(hit_t))';
+hit_len = 0.05;
+hit_freq1 = 250;
+hit_freq2 = 1000;
+hit_t = 1/sound_fs:1/sound_fs:hit_len;
+hit_sound = hit_amp.*chirp(hit_t,hit_freq1,hit_t(end),hit_freq2) .* gausswin(numel(hit_t))';
 
 
 %% make trial structure
@@ -66,7 +72,7 @@ trls = cat(1,trls,zeros(n_nogo_trls,1));
 
 %% serial coms w/ teensy
 
-% teensy codes
+% teensy state codes
 teensy_reset =      '<S,1>';
 teensy_go_trial =   '<S,2>';
 teensy_nogo_trial = '<S,3>';
@@ -119,9 +125,9 @@ while f.UserData.state ~= 3
         end
         continue
 
-    elseif f.UserData.state == 1 % detection run
+    elseif f.UserData.state == 1 % detection or pairing run
 
-        run_type = f.UserData.run_type; % Detect
+        run_type = f.UserData.run_type;
 
         trl_cntr = 1;
         present = 1;
@@ -133,6 +139,7 @@ while f.UserData.state ~= 3
         data_fid_stream = fopen([save_pth '\data_stream.csv'],'w');
         data_fid_notes = fopen([save_pth '\data_notes.csv'],'w');
         fprintf(data_fid_notes,id);
+        print_parameters(data_fid_notes,teensy_fs, baseln, n_trials, prcnt_go, sig_amps, prcnt_amps,time_out_len, play_error_sound, play_hit_sound, pulse_type, pulse_len, pulse_intrvl, sound_fs, err_freq1, err_freq2, err_amp, err_len, hit_freq1, hit_freq2, hit_amp, hit_len);
 
         %% setup trial parameter distributions       
         iti_dist = iti_sd.*randn(n_trials,1) + iti_mu;
@@ -246,18 +253,14 @@ while f.UserData.state ~= 3
                 end
             end
 
-            if ~prior_was_error % if we're not administering a timeout, give the fixed iti portion, allowing for reward consumption, reset, etc
-                while trial_is_done % now wait until the whole trial (i.e., response, reward delivery, consume period, etc) is done
-                    trial_is_done = f.UserData.TeensyDone;
-                    % wait for end of trial message from teensy before moving on
-                    % but make sure the serial callback has room to breath:
-                    pause(0.1)
-                    if f.UserData.state == 2 || f.UserData.state == 3 % this allows us to end the run or quit while waiting for trial outcome
-                        break
-                    end
+            while trial_is_done % now wait until the whole trial (i.e., response, reward delivery, consume period, etc) is done
+                trial_is_done = f.UserData.TeensyDone;
+                % wait for end of trial message from teensy before moving on
+                % but make sure the serial callback has room to breath:
+                pause(0.1)
+                if f.UserData.state == 2 || f.UserData.state == 3 % this allows us to end the run or quit while waiting for trial outcome
+                    break
                 end
-            else
-                pause(0.5);
             end
 
             % Change all outcome text back to gray, and track

@@ -10,22 +10,22 @@ Serial interaction
 
 const uint Fs = 2000;  // Teensy sampling rate
 
-const bool enforceEarlyLick = false; // error out if the mouse licks pre-stim 
-const uint lickMax = 10; // how many licks are too many licks
+bool enforceEarlyLick = false; // error out if the mouse licks pre-stim 
+uint lickMax = 20; // how many licks are too many licks
 
-const bool waitForNextFrame = false; // if frame counting wait for a new frame to start to present a stimulus
+bool waitForNextFrame = false; // if frame counting wait for a new frame to start to present a stimulus
 
-const uint contingentStim = 0; // index of the analog channel that the animal is responding to / detecting
+uint contingentStim = 0; // index of the analog channel that the animal is responding to / detecting
 
 // time lengths
-const uint trigLen =    Fs * 0.2; // trigger lenght in seconds
-const uint respLen =    Fs * 1;   // how long from stim start is a response considered valid,
-const uint valveLen =   Fs * 1;   // how long to open reward valve in samples
-const uint consumeLen = Fs * 4;   // how long from reward administration does the animal have to consume the reward
-const uint vacLen =     Fs * 1;   // how long to open reward valve in samples
-const uint pairDelay =  Fs * 1;   // in pairing trials, time between stim and reward
-const uint earlyLen =   Fs * 0.2; // how long to broadcast early lick
-const uint removeLen =  Fs * 1;
+uint trigLen =    Fs * 0.2; // trigger lenght in seconds
+uint respLen =    Fs * 2;   // how long from stim start is a response considered valid,
+uint valveLen =   Fs * 1;   // how long to open reward valve in samples
+uint consumeLen = Fs * 3;   // how long from reward administration does the animal have to consume the reward
+uint vacLen =     Fs * 1;   // how long to open reward valve in samples
+uint pairDelay =  Fs * 0;   // in pairing trials, time between stim and reward
+uint earlyLen =   Fs * 0.2; // how long to broadcast early lick
+uint removeLen =  Fs * 1;
 
 // channels
 // ins
@@ -39,7 +39,7 @@ const uint trigChan3 = 2;  // trigger channel;
 const uint trigChan4 = 3;  // trigger channel;
 
 const uint valveChan1 = 4; // reward valve
-const uint valveChan2 = 5; // vac line valve for reward removal
+const uint valveChan2 = 6; // vac line valve for reward removal
 
 volatile uint16_t wheelVal = 0;
 volatile int lickVal = 0;
@@ -162,6 +162,9 @@ void setup() {
 
   pinMode(valveChan1, OUTPUT);
   digitalWrite(valveChan1, LOW);
+
+  pinMode(valveChan2, OUTPUT);
+  digitalWrite(valveChan2, LOW);
 
   pinMode(trigChan1, OUTPUT);
   digitalWrite(trigChan1, LOW);
@@ -648,6 +651,38 @@ void parseData() {  // split the data into its parts
     } else if (msgCode == 'S') {  // setting state parameters
       ptr = strtok(NULL, ",");
       State = atoi(ptr);
+    } else if (msgCode == 'P'){
+      ptr = strtok(NULL, ",");
+      param_id = atoi(ptr);
+      param_vel = atoi(ptr);
+      if (param_id == 1){ // enforce_lick, bool
+        if (param_val == 1){
+          enforceEarlyLick = true;
+        } else {
+          enforceEarlyLick = false;
+        }
+      } else if (pram_id == 2){ //max lick, uint
+        lickMax = param_val;
+      } else if (pram_id == 3){ // wait for frame, bool
+        if (param_val == 1){
+          waitForNextFrame = true;
+        } else {
+          waitForNextFrame = false;
+        }
+      } else if (pram_id == 4){ // contingent stim index, uint
+      } else if (pram_id == 5){ // trigger broadcast length, 
+      } else if (pram_id == 6){ // 
+      } else if (pram_id == 7){ //
+      } else if (pram_id == 8){ //
+      } else if (pram_id == 9){ //
+      } else if (pram_id == 10){ //
+      } else if (pram_id == 11){ // 
+      } else if (pram_id == 12){ //
+       
+
+      } 
+
+
     }
     newData = false;
   }
