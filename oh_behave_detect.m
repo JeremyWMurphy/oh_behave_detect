@@ -14,12 +14,12 @@ prcnt_amps = [1]; % proportion of different amplitudes to present - needs to add
 
 % mean and sd of random iti, should factor in tolal time of teensy trial -
 % i.e., stim, response, reward, consume, reward removal, times
-iti_mu = 5;
+iti_mu = 6;
 iti_sd = 0.5;
 
-time_out_len = [3 5]; % interval to timeout if there was an early lick and we are enforcing them
-play_error_sound = false; % play gross noise if early lick
-play_hit_sound = false;
+time_out_len = [4 6]; % interval to timeout if there was an early lick and we are enforcing them
+play_error_sound = true; % play gross noise if early lick
+play_hit_sound = true;
 
 % initial teensy waveform stimulus parameters, currently fixed to Shin and
 % Moore, 2019: whale, 6 ms rise, 20 ms fall, 20 Hz, 10 reps, 500 ms --
@@ -56,7 +56,7 @@ hit_sound = hit_amp.*chirp(hit_t,hit_freq1,hit_t(end),hit_freq2) .* gausswin(num
 
 % set teensy parameters
 tp.enforceEarlyLick = 1; % 1/0
-tp.lickMax = 20; % uint
+tp.lickMax = 10; % uint
 tp.waitForNextFrame = 0; % 1/0
 tp.contingentStim = 0; % uint 0-3, or number of dac channels, zero index based
 tp.trigLen = 0.2; % double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec 

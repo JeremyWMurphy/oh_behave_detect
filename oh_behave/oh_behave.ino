@@ -12,6 +12,7 @@ const uint Fs = 2000;  // Teensy sampling rate
 
 bool enforceEarlyLick = false; // error out if the mouse licks pre-stim 
 uint lickMax = 20; // how many licks are too many licks
+uint lickDebounce = 0.05 * Fs; // so as not to over-count licks, mouse would have to lick >= 20 Hz for this to under-count 
 
 bool waitForNextFrame = false; // if frame counting wait for a new frame to start to present a stimulus
 
@@ -76,8 +77,8 @@ volatile bool hasResponded = false;
 volatile uint32_t respT = 0;
 
 volatile uint lickCount = 0;
+volatile uint lickLow = 0;
 volatile bool firstLick = true;
-volatile bool lickUnlatch = false;
 volatile bool earlyStart = false;
 volatile uint32_t earlyT = 0;
 
@@ -244,20 +245,24 @@ void goNoGo() {
     waveWrite();  // present stim
     if (!stimBegin[contingentStim]){
       if (enforceEarlyLick){
-        if (lickVal==1 && firstLick){
+        if (lickVal==HIGH && firstLick){
           lickCount = 1;
           firstLick = false;
-        } else if (lickCount >= 1 && lickVal == 0){
-          lickUnlatch = true;
-        } else if (lickVal == 1 && lickUnlatch) {
+        } else if (lickLow < lickDebounce){
+          if (lickVal==LOW){
+            lickLow++;
+          } else {
+            lickLow = 0;
+          }
+        } else if (lickLow >= lickDebounce && lickVal==HIGH) {
           lickCount++;
-          lickUnlatch = false;
+          lickLow = 0;
         }
         if (lickCount > lickMax){
           trialOutcome = LICK;
           lickCount = 0;
+          lickLow = 0;
           firstLick = true;
-          lickUnlatch = false;
           State = EARLYLICK;
         }
       }      
@@ -341,20 +346,24 @@ void pairing() {
     waveWrite();  // present stim
     if (!stimBegin[contingentStim]){
       if (enforceEarlyLick){
-        if (lickVal==1 && firstLick){
+        if (lickVal==HIGH && firstLick){
           lickCount = 1;
           firstLick = false;
-        } else if (lickCount >= 1 && lickVal == 0){
-          lickUnlatch = true;
-        } else if (lickVal == 1 && lickUnlatch) {
+        } else if (lickLow < lickDebounce){
+          if (lickVal==LOW){
+            lickLow++;
+          } else {
+            lickLow = 0;
+          }
+        } else if (lickLow >= lickDebounce && lickVal==HIGH) {
           lickCount++;
-          lickUnlatch = false;
+          lickLow = 0;
         }
         if (lickCount > lickMax){
           trialOutcome = LICK;
           lickCount = 0;
+          lickLow = 0;
           firstLick = true;
-          lickUnlatch = false;
           State = EARLYLICK;
         }
       } 
@@ -498,6 +507,9 @@ void endOfTrialCleanUp(){
   removeStart = true;
   frameWaitStart = true;
   trialOutcome = 0;
+  lickCount = 0;
+  lickLow = 0;
+  firstLick = true;
   State = IDLE;
 }
 
@@ -656,6 +668,7 @@ void parseData() {  // split the data into its parts
     } else if (msgCode == 'P'){ // setting parameters
       ptr = strtok(NULL, ",");
       param_id = atoi(ptr);
+      ptr = strtok(NULL, ",");
       param_val = atoi(ptr);
       if (param_id == 1){ // enforce_lick, bool
         if (param_val == 1){
