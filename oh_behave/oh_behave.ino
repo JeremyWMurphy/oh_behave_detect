@@ -123,6 +123,8 @@ const byte numChars = 255;
 volatile char receivedChars[numChars];
 volatile bool newData = false;
 volatile char msgCode;
+uint param_id;
+uint param_val;
 
 // Counters
 volatile uint32_t loopCount = 0;
@@ -648,41 +650,44 @@ void parseData() {  // split the data into its parts
       rampStep[chanSelect] = (volatile uint)ceil((float)waveAmp[chanSelect] / waveDur[chanSelect]);
       // this is always computed, but only used if using whale stim
       whaleStep[chanSelect] = (volatile uint)ceil((float)waveDur[chanSelect] / SamplesNum);  // how quickly to step through the asymCosine
-    } else if (msgCode == 'S') {  // setting state parameters
+    } else if (msgCode == 'S') {  // setting State
       ptr = strtok(NULL, ",");
       State = atoi(ptr);
-    } else if (msgCode == 'P'){
+    } else if (msgCode == 'P'){ // setting parameters
       ptr = strtok(NULL, ",");
       param_id = atoi(ptr);
-      param_vel = atoi(ptr);
+      param_val = atoi(ptr);
       if (param_id == 1){ // enforce_lick, bool
         if (param_val == 1){
           enforceEarlyLick = true;
         } else {
           enforceEarlyLick = false;
         }
-      } else if (pram_id == 2){ //max lick, uint
+      } else if (param_id == 2){ //max lick, uint
         lickMax = param_val;
-      } else if (pram_id == 3){ // wait for frame, bool
+      } else if (param_id == 3){ // wait for frame, bool
         if (param_val == 1){
           waitForNextFrame = true;
         } else {
           waitForNextFrame = false;
         }
-      } else if (pram_id == 4){ // contingent stim index, uint
-      } else if (pram_id == 5){ // trigger broadcast length, 
-      } else if (pram_id == 6){ // 
-      } else if (pram_id == 7){ //
-      } else if (pram_id == 8){ //
-      } else if (pram_id == 9){ //
-      } else if (pram_id == 10){ //
-      } else if (pram_id == 11){ // 
-      } else if (pram_id == 12){ //
-       
-
+      } else if (param_id == 4){ // contingent stim index, uint
+        contingentStim = param_val;
+      } else if (param_id == 5){ // trigger broadcast length, 
+        trigLen = Fs * param_val;
+      } else if (param_id == 6){ // response window length
+        respLen = Fs * param_val; 
+      } else if (param_id == 7){ // how long to open reward valve
+        valveLen =   Fs * param_val;
+      } else if (param_id == 8){ // how long from reward administration does the animal have to consume the reward
+        consumeLen = Fs * param_val;   
+      } else if (param_id == 9){ // in pairing trials, time between stim and reward
+        pairDelay =  Fs * param_val;
+      } else if (param_id == 10){ // how long to broadcast early lick
+        earlyLen =   Fs * 0.2; 
+      } else if (param_id == 11){ // how long to open remove reward valve for
+        removeLen =  Fs * param_val;
       } 
-
-
     }
     newData = false;
   }

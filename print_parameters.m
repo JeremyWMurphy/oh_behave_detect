@@ -1,5 +1,4 @@
-function [] = print_parameters(fid,teensy_fs, baseln, n_trials, prcnt_go, sig_amps, prcnt_maps,time_out_len, play_error_sound, play_hit_sound, pulse_type, pulse_len, pulse_intrvl, sound_fs, err_freq1, err_freq2, err_amp, err_len, hit_freq1, hit_freq2, hit_amp, hit_len)
-
+function [] = print_parameters(fid,teensy_fs, baseln, n_trials, prcnt_go, sig_amps, prcnt_maps,time_out_len, play_error_sound, play_hit_sound, pulse_type, pulse_len, pulse_intrvl, sound_fs, err_freq1, err_freq2, err_amp, err_len, hit_freq1, hit_freq2, hit_amp, hit_len,tp)
 
 %% package parameters
 S = struct('Fs',teensy_fs, ...
@@ -24,10 +23,15 @@ S = struct('Fs',teensy_fs, ...
     'hit_sound_amp',hit_amp,...
     'hit_sound_len',hit_len);
 
-
 fns = fieldnames(S);
 for i = 1:numel(fns)
     fprintf(fid,['\n' fns{i} ': ' num2str(S.(fns{i}))]);
+end
+
+% also print the parameters that get senst to teensy
+fns = fieldnames(tp);
+for i = 1:numel(fns)
+    fprintf(fid,['\n' fns{i} ': ' num2str(tp.(fns{i}))]);
 end
 
 

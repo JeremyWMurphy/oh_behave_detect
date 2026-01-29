@@ -54,7 +54,19 @@ hit_freq2 = 1000;
 hit_t = 1/sound_fs:1/sound_fs:hit_len;
 hit_sound = hit_amp.*chirp(hit_t,hit_freq1,hit_t(end),hit_freq2) .* gausswin(numel(hit_t))';
 
-
+% set teensy parameters
+tp.enforceEarlyLick = 1; % 1/0
+tp.lickMax = 20; % uint
+tp.waitForNextFrame = 0; % 1/0
+tp.contingentStim = 0; % uint 0-3, or number of dac channels, zero index based
+tp.trigLen = 0.2; % double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec 
+tp.respLen = 2; % double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec 
+tp.valveLen = 1;  % double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec 
+tp.consumeLen = 3; % double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec   
+tp.pairDelay =  0; % double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec   
+tp.earlyLen =   0.2; % double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec   
+tp.removeLen =  1;
+ 
 %% make trial structure
 
 % map requested voltage values to uint 12 bit
@@ -127,6 +139,9 @@ while f.UserData.state ~= 3
 
     elseif f.UserData.state == 1 % detection or pairing run
 
+        % send the parameters that need to be set on teensy
+        set_teensy_parameters(s,tp);
+
         run_type = f.UserData.run_type;
 
         trl_cntr = 1;
@@ -139,7 +154,9 @@ while f.UserData.state ~= 3
         data_fid_stream = fopen([save_pth '\data_stream.csv'],'w');
         data_fid_notes = fopen([save_pth '\data_notes.csv'],'w');
         fprintf(data_fid_notes,id);
-        print_parameters(data_fid_notes,teensy_fs, baseln, n_trials, prcnt_go, sig_amps, prcnt_amps,time_out_len, play_error_sound, play_hit_sound, pulse_type, pulse_len, pulse_intrvl, sound_fs, err_freq1, err_freq2, err_amp, err_len, hit_freq1, hit_freq2, hit_amp, hit_len);
+        
+        % print all the parameters that we set above
+        print_parameters(data_fid_notes,teensy_fs, baseln, n_trials, prcnt_go, sig_amps, prcnt_amps,time_out_len, play_error_sound, play_hit_sound, pulse_type, pulse_len, pulse_intrvl, sound_fs, err_freq1, err_freq2, err_amp, err_len, hit_freq1, hit_freq2, hit_amp, hit_len,tp);
 
         %% setup trial parameter distributions       
         iti_dist = iti_sd.*randn(n_trials,1) + iti_mu;
