@@ -8,7 +8,7 @@ teensy_fs = 2000; % teensy sample rate, Hz
 baseln = 5; % length of pause at begining of each run, sec
 
 n_trials = 300; % number of total trials to run
-prcnt_go = 1; % percentage of trials that are go trials
+prcnt_go = 0.9; % percentage of trials that are go trials
 sig_amps = [3]; % amplitudes of stimuli, Volts
 prcnt_amps = [1]; % proportion of different amplitudes to present - needs to add to 1
 
@@ -156,7 +156,7 @@ while f.UserData.state ~= 3
         fprintf(data_fid_notes,id);
         
         % print all the parameters that we set above
-        print_parameters(data_fid_notes,teensy_fs, baseln, n_trials, prcnt_go, sig_amps, prcnt_amps,time_out_len, play_error_sound, play_hit_sound, pulse_type, pulse_len, pulse_intrvl, sound_fs, err_freq1, err_freq2, err_amp, err_len, hit_freq1, hit_freq2, hit_amp, hit_len,tp);
+        print_parameters(data_fid_notes,teensy_fs, baseln, n_trials, prcnt_go, sig_amps, prcnt_amps,iti_mu,iti_sd,time_out_len, play_error_sound, play_hit_sound, pulse_type, pulse_len, pulse_intrvl, sound_fs, err_freq1, err_freq2, err_amp, err_len, hit_freq1, hit_freq2, hit_amp, hit_len,tp);
 
         %% setup trial parameter distributions       
         iti_dist = iti_sd.*randn(n_trials,1) + iti_mu;
