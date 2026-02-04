@@ -40,10 +40,10 @@ nan_vec = nan(fs*n_sec_disp,1);
 
 ax.XAxis.Visible  = 'off';
 
-plot(ax,nan_vec,'Color',[255 128 255]./255,'LineWidth',1); % piezo signal
-plot(ax,nan_vec,'Color',[128 255 128]./255,'LineWidth',1); % wheel
-plot(ax,nan_vec,'Color',[111 255 255]./255,'LineWidth',1); % frame raw
-plot(ax,nan_vec,'LineStyle','None','Marker','o','MarkerFaceColor',[255 255 111]./255,'MarkerEdgeColor','None','MarkerSize',3); % lick detector
+plot(ax,nan_vec,'Color',[112 214 255]./255); % piezo signal
+plot(ax,nan_vec,'Color',[25 0 110]./255); % wheel
+plot(ax,nan_vec,'Color',[251 86 7]./255); % frame raw
+plot(ax,nan_vec,'Color',[255 190 11]./255); % lick detector
 
 %% notes text box
 

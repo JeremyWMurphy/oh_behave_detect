@@ -108,10 +108,10 @@ id_field = gl.Children(6);
 pth_field = gl.Children(7);
 notes = gl.Children(4);
 hit_txt = gl.Children(20);
-miss_txt = gl.Children(21);
-cw_txt = gl.Children(22);
-fa_txt = gl.Children(23);
-el_txt = gl.Children(24);
+miss_txt = gl.Children(22);
+cw_txt = gl.Children(24);
+fa_txt = gl.Children(26);
+el_txt = gl.Children(28);
 
 %% Main
 trial_is_done = false;

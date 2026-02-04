@@ -20,11 +20,13 @@ if ~isempty(data)
     data = sscanf(data,'<%d,%d,%d,%d,%d,%d,%d,%d>\n');    
     data = reshape(data,8,[])';
 
+    data(data(:,7)==0,7) = NaN;
+
     % set data graphs
     ax.Children(4).set('Ydata',[ax.Children(4).YData(size(data,1)+1:end) 1 + data(:,5)'./4095]); % ao0
     ax.Children(3).set('Ydata',[ax.Children(3).YData(size(data,1)+1:end) 3 + data(:,8)'./1024]); % wheel
     ax.Children(2).set('Ydata',[ax.Children(2).YData(size(data,1)+1:end) 5 + [diff(data(:,2)') 0]]); % frames
-    ax.Children(1).set('Ydata',[ax.Children(1).YData(size(data,1)+1:end) 7 + data(:,7)']); % licks
+    ax.Children(1).set('Ydata',[ax.Children(1).YData(size(data,1)+1:end) 6 + data(:,7)']); % licks
 
     ot = find(data(:,4) ~= 0,1,'first'); 
     if ~isempty(ot)
