@@ -702,19 +702,19 @@ void parseData() {  // split the data into its parts
       } else if (param_id == 4){ // contingent stim index, uint
         contingentStim = param_val;
       } else if (param_id == 5){ // trigger broadcast length, 
-        trigLen = Fs * param_val;
+        trigLen = (volatile uint)round((param_val / 1000.0) * Fs);
       } else if (param_id == 6){ // response window length
-        respLen = Fs * param_val; 
+        respLen = (volatile uint)round((param_val / 1000.0) * Fs); 
       } else if (param_id == 7){ // how long to open reward valve
-        valveLen =   Fs * param_val;
+        valveLen = (volatile uint)round((param_val / 1000.0) * Fs);
       } else if (param_id == 8){ // how long from reward administration does the animal have to consume the reward
-        consumeLen = Fs * param_val;   
+        consumeLen = (volatile uint)round((param_val / 1000.0) * Fs);
       } else if (param_id == 9){ // in pairing trials, time between stim and reward
-        pairDelay =  Fs * param_val;
+        pairDelay = (volatile uint)round((param_val / 1000.0) * Fs);
       } else if (param_id == 10){ // how long to broadcast early lick
-        earlyLen =   Fs * 0.2; 
+        earlyLen = (volatile uint)round((param_val / 1000.0) * Fs);
       } else if (param_id == 11){ // how long to open remove reward valve for
-        removeLen =  Fs * param_val;
+        removeLen = (volatile uint)round((param_val / 1000.0) * Fs);
       } 
     }
     newData = false;

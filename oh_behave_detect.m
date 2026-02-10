@@ -14,12 +14,9 @@ prcnt_amps = [1]; % proportion of different amplitudes to present - needs to add
 
 % mean and sd of random iti, should factor in tolal time of teensy trial -
 % i.e., stim, response, reward, consume, reward removal, times
-%iti_mu = 3;
-%iti_sd = 0.5;
+iti_len = [4 6];
 
-iti_len = [2 4];
-
-time_out_len = [3 6]; % interval to timeout if there was an early lick and we are enforcing them
+time_out_len = [2 5]; % interval to timeout if there was an early lick and we are enforcing them
 play_error_sound = true; % play gross noise if early lick
 play_hit_sound = true;
 
@@ -49,25 +46,25 @@ err_t = 1/sound_fs:1/sound_fs:err_len;
 error_sound = err_amp*sin(2*pi*err_freq1*err_t) + sin(0.33*pi*err_freq2*err_t);
 
 % hit  sound
-hit_amp = 0.2;
+hit_amp = 0.5;
 hit_len = 0.05;
 hit_freq1 = 250;
 hit_freq2 = 1000;
 hit_t = 1/sound_fs:1/sound_fs:hit_len;
 hit_sound = hit_amp.*chirp(hit_t,hit_freq1,hit_t(end),hit_freq2) .* gausswin(numel(hit_t))';
 
-% set teensy parameters
-tp.enforceEarlyLick = 0; % 1/0
+% set teensy parameters, *time should be in ms
+tp.enforceEarlyLick = 1; % 1/0
 tp.lickMax = 3; % uint
 tp.waitForNextFrame = 0; % 1/0
 tp.contingentStim = 0; % uint 0-3, or number of dac channels, zero index based
-tp.trigLen = 0.2; % length of trigger broadcast/digital high, double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec 
-tp.respLen = 2; % length of response window from stim onset double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec 
-tp.valveLen = 1;  % how long the valve opens on reward, double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec 
-tp.consumeLen = 2.5; % how much time to give between reward administration and starting the next trial, double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec   
-tp.pairDelay =  1; % if doing pairing, offset between stim and reward, double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec   
-tp.earlyLen =   0.2; % length of time to braodcast an outcome of an early response, double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec   
-tp.removeLen =  1; % how long to open the valve for the vacuum to suck away reward
+tp.trigLen = 200; % length of trigger broadcast/digital high, double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec 
+tp.respLen = 1500; % length of response window from stim onset double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec 
+tp.valveLen = 1000;  % how long the valve opens on reward, double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec 
+tp.consumeLen = 2500; % how much time to give between reward administration and starting the next trial, double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec   
+tp.pairDelay =  1000; % if doing pairing, offset between stim and reward, double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec   
+tp.earlyLen =   200; % length of time to braodcast an outcome of an early response, double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec   
+tp.removeLen =  1000; % how long to open the valve for the vacuum to suck away reward
  
 %% make trial structure
 
@@ -96,6 +93,8 @@ teensy_trigger =    '<S,7>';
 % connect to teensy
 s = serialport(serial_port,115200);
 pause(1);
+% send the parameters that need to be set on teensy
+set_teensy_parameters(s,tp);
 
 %% make main gui figure
 f = make_ui_figure(teensy_fs,n_sec_disp,s,sig_amps);
@@ -141,8 +140,6 @@ while f.UserData.state ~= 3
 
     elseif f.UserData.state == 1 % detection or pairing run
 
-        % send the parameters that need to be set on teensy
-        set_teensy_parameters(s,tp);
 
         run_type = f.UserData.run_type;
 
