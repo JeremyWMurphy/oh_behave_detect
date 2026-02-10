@@ -44,6 +44,8 @@ const uint valveChan2 = 6; // vac line valve for reward removal
 
 volatile uint16_t wheelVal = 0;
 volatile int lickVal = 0;
+volatile int rewardValveVal = 0;
+volatile int removeValveVal = 0;
 
 // state definitions
 const uint IDLE       = 0;
@@ -569,6 +571,8 @@ void pollData() {
   // get data in values
   wheelVal = analogRead(wheelChan);
   lickVal = digitalRead(lickChan);
+  rewardValveVal = digitalRead(valveChan1);
+  removeValveVal = digitalRead(valveChan2);
 }
 
 void dataReport() {
@@ -589,6 +593,10 @@ void dataReport() {
   Serial.print(lickVal);
   Serial.print(",");
   Serial.print(wheelVal);
+  Serial.print(",");
+  Serial.print(rewardValveVal);
+  Serial.print(",");
+  Serial.print(removeValveVal);
   Serial.print(">");
   Serial.println("");
 }

@@ -14,10 +14,8 @@ prcnt_amps = [1]; % proportion of different amplitudes to present - needs to add
 
 % mean and sd of random iti, should factor in tolal time of teensy trial -
 % i.e., stim, response, reward, consume, reward removal, times
-%iti_mu = 3;
-%iti_sd = 0.5;
-
-iti_len = [2 4];
+iti_mu = 3;
+iti_sd = 0.5;
 
 time_out_len = [3 6]; % interval to timeout if there was an early lick and we are enforcing them
 play_error_sound = true; % play gross noise if early lick
@@ -158,11 +156,11 @@ while f.UserData.state ~= 3
         fprintf(data_fid_notes,id);
         
         % print all the parameters that we set above
-        print_parameters(data_fid_notes,teensy_fs, baseln, n_trials, prcnt_go, sig_amps, prcnt_amps,iti_len,time_out_len, play_error_sound, play_hit_sound, pulse_type, pulse_len, pulse_intrvl, sound_fs, err_freq1, err_freq2, err_amp, err_len, hit_freq1, hit_freq2, hit_amp, hit_len,tp);
+        print_parameters(data_fid_notes,teensy_fs, baseln, n_trials, prcnt_go, sig_amps, prcnt_amps,iti_mu,iti_sd,time_out_len, play_error_sound, play_hit_sound, pulse_type, pulse_len, pulse_intrvl, sound_fs, err_freq1, err_freq2, err_amp, err_len, hit_freq1, hit_freq2, hit_amp, hit_len,tp);
 
         %% setup trial parameter distributions       
-        % iti_dist = iti_sd.*randn(n_trials,1) + iti_mu;
-        iti_dist = iti_len(1) + ((iti_len(2) - iti_len(1)) * rand(n_trials,1));
+        iti_dist = iti_sd.*randn(n_trials,1) + iti_mu;
+        iti_dist = round(iti_len(1) + (iti_len(2) - iti_len(1)) * rand);
         trls = trls(randperm(size(trls,1)));
 
         s.flush;
@@ -196,7 +194,7 @@ while f.UserData.state ~= 3
             end
 
             if prior_was_error
-                iti = round(1e3*(time_out_len(1) + (time_out_len(2) - time_out_len(1)) * rand));
+                iti = 1e3*round(time_out_len(1) + (time_out_len(2) - time_out_len(1)) * rand);
                 prior_was_error = false;                
             else
                 iti = round(1e3*iti_dist(trl_cntr));
