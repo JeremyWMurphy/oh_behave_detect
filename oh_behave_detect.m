@@ -7,17 +7,17 @@ teensy_fs = 2000; % teensy sample rate, Hz
 % experiment parameters
 baseln = 5; % length of pause at begining of each run, sec
 
-n_trials = 300; % number of total trials to run
-prcnt_go = 0.9; % percentage of trials that are go trials
+n_trials = 200; % number of total trials to run
+prcnt_go = 1; % percentage of trials that are go trials
 sig_amps = [3]; % amplitudes of stimuli, Volts
 prcnt_amps = [1]; % proportion of different amplitudes to present - needs to add to 1
 
 % mean and sd of random iti, should factor in tolal time of teensy trial -
 % i.e., stim, response, reward, consume, reward removal, times
-iti_mu = 6;
+iti_mu = 4;
 iti_sd = 0.5;
 
-time_out_len = [3 5]; % interval to timeout if there was an early lick and we are enforcing them
+time_out_len = [3 6]; % interval to timeout if there was an early lick and we are enforcing them
 play_error_sound = true; % play gross noise if early lick
 play_hit_sound = true;
 
@@ -55,15 +55,15 @@ hit_t = 1/sound_fs:1/sound_fs:hit_len;
 hit_sound = hit_amp.*chirp(hit_t,hit_freq1,hit_t(end),hit_freq2) .* gausswin(numel(hit_t))';
 
 % set teensy parameters
-tp.enforceEarlyLick = 1; % 1/0
-tp.lickMax = 10; % uint
+tp.enforceEarlyLick = 0; % 1/0
+tp.lickMax = 3; % uint
 tp.waitForNextFrame = 0; % 1/0
 tp.contingentStim = 0; % uint 0-3, or number of dac channels, zero index based
 tp.trigLen = 0.2; % length of trigger broadcast/digital high, double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec 
 tp.respLen = 2; % length of response window from stim onset double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec 
 tp.valveLen = 1;  % how long the valve opens on reward, double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec 
 tp.consumeLen = 2.5; % how much time to give between reward administration and starting the next trial, double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec   
-tp.pairDelay =  0; % if doing pairing, offset between stim and reward, double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec   
+tp.pairDelay =  1; % if doing pairing, offset between stim and reward, double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec   
 tp.earlyLen =   0.2; % length of time to braodcast an outcome of an early response, double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec   
 tp.removeLen =  1; % how long to open the valve for the vacuum to suck away reward
  

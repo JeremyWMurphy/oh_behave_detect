@@ -195,9 +195,11 @@ void ohBehave() {
 
   } else if (State == RESET) {  // reset main
     // this should only be called for one loop of ohBehave before reverting to state 0
+    endOfTrialCleanUp();
     loopCount = 0;
     frameCount = 0;
     trialOutcome = 0;
+    State = IDLE;
 
   } else if (State == GO) {  // GO
     goNoGo();
@@ -496,6 +498,11 @@ void endOfTrialCleanUp(){
       inBase[i] = true;
   }
   digitalWrite(valveChan1, LOW);
+  digitalWrite(valveChan2, LOW);
+  digitalWrite(trigChan1, LOW);
+  digitalWrite(trigChan2, LOW);
+  digitalWrite(trigChan3, LOW);
+  digitalWrite(trigChan4, LOW);
   earlyStart = true;
   conStimOn = false;
   stimEnd = false;
