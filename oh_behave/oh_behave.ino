@@ -59,6 +59,7 @@ const uint TRIGGER    = 7;
 const uint REWARD     = 8; 
 const uint STIMULUS   = 9; 
 const uint EARLYLICK = 10; 
+const uint REMOVEREWARD = 11;
 volatile uint State = IDLE;
 
 // Behavior tracking
@@ -229,6 +230,9 @@ void ohBehave() {
   
   } else if (State == EARLYLICK){ // if early licks are enforced, and there's an early lick, break the trial and reset
     dealWithEarlyLick();
+
+  } else if (State == REMOVEREWARD){
+    removeReward();
   }
   
   dataReport();
@@ -276,11 +280,7 @@ void goNoGo() {
         respStart = false;
       }          
       if (!hasResponded) {    
-        if ((State == GO) && (lickVal == HIGH)) {  // check for licks, if any, then HIT or FA, mark it, don't keep checking
-          trialOutcome = HIT;
-          hasResponded = true;
-        } else if ((State == NOGO) && (lickVal == HIGH)) {  // FA
-          trialOutcome = FA;
+        if (lickVal == HIGH) {  // check for licks, if any, then HIT or FA, mark it, don't keep checking
           hasResponded = true;
         }
       }
@@ -292,7 +292,13 @@ void goNoGo() {
         dispT = loopCount;
         dispStart = false;
       }
-      if (trialOutcome == 0) {  // if there was never a response, assign miss or CW
+      if (hasResponded) {  // if there was a response, assign hit or fa
+        if (State == GO){
+          trialOutcome = HIT;
+        } else if (State == NOGO){
+          trialOutcome = FA;
+        }
+      } else {  // or there was no response, assign miss or cw
         if (State == GO) {
           trialOutcome = MISS;
         } else if (State == NOGO) {
@@ -306,7 +312,7 @@ void goNoGo() {
           consumeStart = false;
         }
         if (loopCount - consumeT > consumeLen){
-          removeReward();
+          State = REMOVEREWARD;
         }
       } else if (trialOutcome == HIT) {
         digitalWrite(valveChan1, HIGH);
@@ -335,10 +341,19 @@ void justReward() {
     dispStart = false;
   }
   if (loopCount - dispT > valveLen) {  // end of reward dispense, reset things
-     endOfTrialCleanUp();
+    digitalWrite(valveChan1, LOW);
+    if (consumeStart){
+      consumeT = loopCount;
+      consumeStart = false;
+    }
+    if (loopCount - consumeT > consumeLen){
+      trialOutcome = HIT;
+      State = REMOVEREWARD;
+  }
   } else {
     digitalWrite(valveChan1, HIGH);
-  }
+  } 
+
 }
 
 void pairing() {
@@ -393,7 +408,7 @@ void pairing() {
           consumeStart = false;
         }
         if (loopCount - consumeT > consumeLen){
-          removeReward();
+          State = REMOVEREWARD;
         }
       } else {
         digitalWrite(valveChan1, HIGH);
