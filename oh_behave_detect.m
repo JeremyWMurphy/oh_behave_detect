@@ -352,7 +352,6 @@ while f.UserData.state ~= 3
 
 end
 
-
 %% end program
 try exist(data_fid_stream,'var')
     kill_program(s,notes,data_fid_stream,data_fid_notes);
