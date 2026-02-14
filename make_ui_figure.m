@@ -1,7 +1,7 @@
 function fig = make_ui_figure(fs,n_sec_disp,s,sig_amps)
 
 default_id = 'NA';
-pth_main  = 'C:\Users\Jeremy\Documents\';
+pth_main  = 'C:\Users\ephys\Desktop\';
 
 ax1_color_pallette = {'#75f5f3','#75f5a7','#f49234','#5af434','#f674e6','#e8f028'};
 
@@ -41,6 +41,7 @@ ax.YTickLabel = {'Frames','Reward Valve','Remove Valve','Wheel','Piezo','Licks'}
 nan_vec = nan(fs*n_sec_disp,1);
 
 ax.XAxis.Visible  = 'off';
+disableDefaultInteractivity(ax);
 
 plot(ax,nan_vec,'Color',ax1_color_pallette{1},'LineWidth',1); % frame raw
 plot(ax,nan_vec,'Color',ax1_color_pallette{2},'LineWidth',1); % reward valve

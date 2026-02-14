@@ -15,12 +15,12 @@ prcnt_amps = [1]; % proportion of different amplitudes to present - needs to add
 % mean and sd of random iti, should factor in tolal time of teensy trial -
 % i.e., stim, response, reward, consume, reward removal, times
 iti_len = [2 4];
-n_resets = 10; % how mant times to reset iti on early like
+n_resets = Inf; % how mant times to reset iti on early like
 fa_timeout_len = 15;
 
 play_error_sound = false; % play gross noise if early lick
 play_hit_sound = true;
-play_fa_sound = true;
+play_fa_sound = false;
 
 % initial teensy waveform stimulus parameters, currently fixed to Shin and
 % Moore, 2019: whale, 6 ms rise, 20 ms fall, 20 Hz, 10 reps, 500 ms --
@@ -68,8 +68,8 @@ tp.lickMax = 1; % uint
 tp.waitForNextFrame = 0; % 1/0
 tp.contingentStim = 0; % uint 0-3, or number of dac channels, zero index based
 tp.trigLen = 200; % length of trigger broadcast/digital high, double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec 
-tp.respLen = 1500; % length of response window from stim onset double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec 
-tp.valveLen = 100;  % how long the valve opens on reward, double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec 
+tp.respLen = 2000; % length of response window from stim onset double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec 
+tp.valveLen = 200;  % how long the valve opens on reward, double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec 
 tp.consumeLen = 1500; % how much time to give between reward administration and starting the next trial, double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec   
 tp.pairDelay =  500; % if doing pairing, offset between stim and reward, double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec   
 tp.earlyLen =   200; % length of time to braodcast an outcome of an early response, double, in seconds, but will be rounded to nearest integer of val * teensy_fs, e.g., 0.2112 * 2000 = 442 points or 0.221 sec   
